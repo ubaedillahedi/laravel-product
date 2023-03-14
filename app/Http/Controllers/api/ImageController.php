@@ -12,6 +12,30 @@ use Illuminate\Support\Facades\Validator;
 
 class ImageController extends Controller
 {
+    public function index()
+    {
+        try {
+            $images = Image::select(['id', 'name', 'file'])->where('enable', 1)->orderBy('name', 'asc')->get();
+            if(!$images->isEmpty()) {
+                foreach ($images as &$image) {
+                    $image->file = asset('storage/images/' . $image->file);
+                }
+            }
+            $response = [
+                'statusCode' => 200,
+                'message' => 'Success!',
+                'data' => $images
+            ];
+        } catch (\Throwable $th) {
+            Log::debug('Error: ' . json_encode($th->getMessage()));
+            $response = [
+                'statusCode' => 400,
+                'message' => 'Failed!'
+            ];
+        }
+        return response()->json($response, $response['statusCode']);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
