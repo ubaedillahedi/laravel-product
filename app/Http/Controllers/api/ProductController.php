@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Image;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use stdClass;
@@ -71,9 +72,10 @@ class ProductController extends Controller
         }
 
         try {
+            DB::beginTransaction();
             $product = Product::create([
                 'name' => $request->name,
-                'descrioption' => $request->description,
+                'description' => $request->description,
                 'enable' => $request->enable,
             ]);
 
@@ -88,6 +90,7 @@ class ProductController extends Controller
                 'message' => 'Success!',
                 'data' => []
             ];
+            DB::commit();
 
         } catch (\Throwable $th) {
             Log::debug('Error: ' . json_encode($th->getMessage()));
@@ -95,7 +98,56 @@ class ProductController extends Controller
                 'statusCode' => 400,
                 'message' => 'Failed!'
             ];
+            DB::rollBack();
         }
         return response()->json($response, $response['statusCode']);
     }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'enable' => 'required',
+            'description' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response([
+                'status' => false,
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+        $response = ['statusCode' => 200, 'message' => 'Success!', 'data' => []];
+        try {
+            DB::beginTransaction();
+            $product = Product::find($id);
+            $product->name = $request->name;
+            $product->description = $request->description;
+            $product->enable = $request->enable;
+            $product->save();
+
+            if(isset($request->categories)) {
+                $expCat = explode(',', $request->categories);
+                $product->categories()->sync($expCat);
+            }
+
+            if(isset($request->images)) {
+                $expImg = explode(',', $request->images);
+                $product->image()->sync($expImg);
+            }
+            $response = ['statusCode' => 200, 'message' => 'Success!', 'data' => []];
+            DB::commit();
+        } catch (\Throwable $th) {
+            Log::debug('Error: ' . json_encode($th->getMessage()));
+            $response = [
+                'statusCode' => 400,
+                'message' => 'Failed!'
+            ];
+            DB::rollBack();
+        }
+
+        return response()->json($response, $response['statusCode']);
+
+    }
+
 }

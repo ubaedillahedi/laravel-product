@@ -34,3 +34,4 @@ Route::delete('/image/{id}', [ImageController::class, 'delete']);
 
 Route::get('/product', [ProductController::class, 'index']);
 Route::post('/product', [ProductController::class, 'store']);
+Route::put('/product/{id}', [ProductController::class, 'update']);
