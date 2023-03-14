@@ -51,4 +51,48 @@ class ImageController extends Controller
         }
         return response()->json($response, $response['statusCode']);
     }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'enable' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()
+            ], 422);
+        }
+        $response = [];
+        try {
+            $image = Image::find($id);
+            if($image == null) return response()->json(['statusCode' => 404, 'message' => 'Not found!']);
+            if($request->hasFile('file')) {
+                $path = Storage::path('public/images');
+                File::isDirectory($path) or File::makeDirectory($path, 0755);
+
+                $fileExt = $request->file('file')->getClientOriginalExtension();
+                $fileName = time() . ".$fileExt";
+                unlink($path.'/'.$image->file);
+                $request->file('file')->storeAs('public/images', $fileName);
+                $image->file = $fileName;
+            }
+            $image->name = $request->name;
+            $image->enable = $request->enable;
+            $image->save();
+            $response = [
+                'statusCode' => 200,
+                'message' => 'Success!'
+            ];
+        } catch (\Throwable $th) {
+            Log::debug('Error: ' . json_encode($th->getMessage()));
+            $response = [
+                'statusCode' => 400,
+                'message' => 'Failed!'
+            ];
+        }
+        return response()->json($response, $response['statusCode']);
+    }
 }
