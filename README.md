@@ -1,5 +1,5 @@
 <p>Projek ini menggunakan framework laravel</p>
-<p>Tahapan membuat projek ini adalah:</p>
+<p>Tahapan menjalankan projek ini adalah:</p>
 <p>1. Jalankan perintah composer install</p>
 <p>2. Buat database pada lokal environment</p>
 <p>3. Ubah file .env.example dan ubah koneksi database-nya</p>
