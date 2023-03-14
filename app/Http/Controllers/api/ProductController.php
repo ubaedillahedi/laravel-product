@@ -135,7 +135,6 @@ class ProductController extends Controller
                 $expImg = explode(',', $request->images);
                 $product->image()->sync($expImg);
             }
-            $response = ['statusCode' => 200, 'message' => 'Success!', 'data' => []];
             DB::commit();
         } catch (\Throwable $th) {
             Log::debug('Error: ' . json_encode($th->getMessage()));
@@ -148,6 +147,28 @@ class ProductController extends Controller
 
         return response()->json($response, $response['statusCode']);
 
+    }
+
+    public function delete(Request $request, $id)
+    {
+        $response = ['statusCode' => 200, 'message' => 'Success!', 'data' => []];
+        try {
+            DB::beginTransaction();
+            $product = Product::find($id);
+            if($product == null) return response()->json(['statusCode' => 200, 'message' => 'Not found!', 'data' => []]);
+            if(!$product->categories()->get()->isEmpty()) $product->categories()->sync([]);
+            if(!$product->images()->get()->isEmpty()) $product->images()->sync([]);
+            $product->delete();
+            DB::commit();
+        } catch (\Throwable $th) {
+            Log::debug('Error: ' . json_encode($th->getMessage()));
+            $response = [
+                'statusCode' => 400,
+                'message' => 'Failed!'
+            ];
+            DB::rollBack();
+        }
+        return response()->json($response, $response['statusCode']);
     }
 
 }
