@@ -95,4 +95,27 @@ class ImageController extends Controller
         }
         return response()->json($response, $response['statusCode']);
     }
+
+    public function delete(Request $request, $id)
+    {
+        $response = [];
+        try {
+            $image = Image::find($id);
+            if($image == null) return response()->json(['statusCode' => 404, 'message' => 'Not found!']);
+            $path = Storage::path('public/images');
+            unlink($path.'/'.$image->file);
+            $image->delete();
+            $response = [
+                'statusCode' => 200,
+                'message' => 'Success!'
+            ];
+        } catch (\Throwable $th) {
+            Log::debug('Error: ' . json_encode($th->getMessage()));
+            $response = [
+                'statusCode' => 400,
+                'message' => 'Failed!'
+            ];
+        }
+        return response()->json($response, $response['statusCode']);
+    }
 }

@@ -28,3 +28,4 @@ Route::delete('/category/{id}', [CategoryController::class, 'delete']);
 
 Route::post('/image', [ImageController::class, 'store']);
 Route::put('/image/{id}', [ImageController::class, 'update']);
+Route::delete('/image/{id}', [ImageController::class, 'delete']);
